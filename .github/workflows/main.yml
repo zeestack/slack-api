@@ -1,4 +1,4 @@
-name: Deploy-serverless-lambda
+name: Deploy
 
 on:
   push:
@@ -6,37 +6,30 @@ on:
       - master
 
 jobs:
-  deploy:
-    name: deploy
+  deploy_lambda:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Install Plugin and Deploy
-        uses: serverless/github-action@v3.1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          args: -c "npm install && npm list && npm run build && serverless plugin install -n serverless-offline && serverless config credentials --provider aws --key ${{secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile serverless-lambda && serverless deploy -c serverless_prod.yml --stage=prod --verbose"
-          entrypoint: /bin/sh
-
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: npm install
         env:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{secrets.AWS_REGION}}
-          dynamodb_endpoint: ${{secrets.DYNAMODB_ENDPOINT}}
-
-          cognito_user_pool_id: ${{ secrets.COGNITO_USER_POOL_ID }}
-          cognito_client_id: ${{ secrets.COGNITO_CLIENT_ID }}
-          cognito_identity_pool_id: ${{ secrets.COGNITO_IDENTITY_POOL_ID }}
-          cognito_user_pool_arn: ${{ secrets.COGNITO_USER_POOL_ARN }}
-
-          jwt_secret_key: ${{ secrets.JWT_SECRET_KEY }}
-          access_token_expiration_time: ${{ secrets.ACCESS_TOKEN_EXPIRATION_TIME }}
-          refresh_token_expiration_time: ${{ secrets.REFRESH_TOKEN_EXPIRATION_TIME }}
+          CI: true
+        run: |
+          npm ci
+      - name: deploy
+        run: |
+          npx ncc build index.ts
+          zip -j deploy.zip ./dist/*
+          aws lambda update-function-code --function-name=lambda-gh-action --zip-file=fileb://deploy.zip
