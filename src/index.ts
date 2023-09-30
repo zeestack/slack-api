@@ -14,7 +14,7 @@ async function bootstrap() {
   app.enableCors();
   await app.init();
   const expressApp = app.getHttpAdapter().getInstance();
-  return serverlessExpress({ app: expressApp });
+  return expressApp;
 }
 
 export const handler: Handler = async (
