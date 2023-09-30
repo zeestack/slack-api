@@ -13,8 +13,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.enableCors();
   await app.init();
-  const expressApp = app.getHttpAdapter().getInstance();
-  return serverlessExpress({ app: expressApp });
+  return app.getHttpAdapter().getInstance();
+  // return serverlessExpress({ app: expressApp });
 }
 
 export const handler: Handler = async (
