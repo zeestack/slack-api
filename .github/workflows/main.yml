@@ -34,5 +34,5 @@ jobs:
           nest build
           mkdir deployment && mv dist deployment && mv node_modules deployment 
           zip -r deploy.zip ./deployment 
-          aws s3 cp deploy.zip s3://s3-slack-api --overwrite
+          aws s3 cp deploy.zip s3://s3-slack-api
           aws lambda update-function-code --function-name=lambda-slack-api --s3-bucket=s3-slack-api --s3-key=deploy.zip
