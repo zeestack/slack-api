@@ -33,5 +33,5 @@ jobs:
           npm install -g @nestjs/cli
           nest build
           mkdir deployment && mv dist deployment && mv node_modules deployment 
-          zip -j deploy.zip ./deployment/*
+          zip -r deploy.zip ./deployment 
           aws lambda update-function-code --function-name=lambda-slack-api --zip-file=fileb://deploy.zip
